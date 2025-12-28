@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/leogan-dev/macrofacts/macrofacts-backend/internal/httpapi"
 )
 
 type Handler struct {
@@ -17,11 +18,11 @@ func NewHandler(svc *Service) *Handler {
 func (h *Handler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, gin.H{"error": "invalid json"})
+		httpapi.BadRequest(c, "invalid json", nil)
 		return
 	}
 	if err := h.svc.Register(req.Username, req.Password); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		httpapi.BadRequest(c, err.Error(), nil)
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"status": "ok"})
@@ -30,13 +31,13 @@ func (h *Handler) Register(c *gin.Context) {
 func (h *Handler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, gin.H{"error": "invalid json"})
+		httpapi.BadRequest(c, "invalid json", nil)
 		return
 	}
 
 	token, uid, un, err := h.svc.Login(req.Username, req.Password)
 	if err != nil {
-		c.JSON(401, gin.H{"error": "invalid credentials"})
+		httpapi.WriteError(c, http.StatusUnauthorized, "UNAUTHORIZED", "invalid credentials", nil)
 		return
 	}
 

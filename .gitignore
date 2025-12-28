@@ -19,3 +19,4 @@ api/tmp/
 # Local data
 data/
 *.db
+openfoodfacts-dump/openfoodfacts-dump

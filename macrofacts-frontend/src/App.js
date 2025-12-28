@@ -47,7 +47,8 @@ function App() {
         const data = await res.json().catch(() => ({}));
 
         if (!res.ok) {
-            alert(data.error || 'Request failed');
+            const msg = (data && data.error && data.error.message) || data.error || 'Request failed';
+            alert(msg);
             return;
         }
 
