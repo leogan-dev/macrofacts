@@ -5,27 +5,31 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-
-	"github.com/leogan-dev/macrofacts/macrofacts-backend/internal/httpapi"
 )
 
-func (s *Service) Middleware() gin.HandlerFunc {
+func Middleware(svc *Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		h := c.GetHeader("Authorization")
-		if !strings.HasPrefix(h, "Bearer ") {
-			httpapi.WriteError(c, http.StatusUnauthorized, "UNAUTHORIZED", "missing bearer token", nil)
-			return
-		}
-		raw := strings.TrimSpace(strings.TrimPrefix(h, "Bearer "))
-
-		uid, un, err := s.ParseToken(raw)
-		if err != nil {
-			httpapi.WriteError(c, http.StatusUnauthorized, "UNAUTHORIZED", "invalid token", nil)
+		authz := strings.TrimSpace(c.GetHeader("Authorization"))
+		if authz == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing authorization"})
 			return
 		}
 
-		c.Set("userId", uid)
-		c.Set("username", un)
+		parts := strings.SplitN(authz, " ", 2)
+		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization"})
+			return
+		}
+
+		userID, username, err := svc.ParseToken(parts[1])
+		if err != nil || userID == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			return
+		}
+
+		c.Set("userId", userID)
+		c.Set("username", username)
+
 		c.Next()
 	}
 }

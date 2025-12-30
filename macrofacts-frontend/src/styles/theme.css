@@ -1,0 +1,78 @@
+:root{
+    /* shared */
+    --volt:#B8FF2C;
+    --blue:#4DA3FF;
+    --danger:#FF3B6B;
+
+    --r-sm:14px;
+    --r-md:18px;
+    --r-lg:24px;
+
+    --shadow: 0 16px 50px rgba(0,0,0,0.50);
+    --shadow2: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+/* DARK */
+:root[data-theme="dark"]{
+    --bg0:#070A0F;
+    --bg1:#0B1020;
+
+    --card: rgba(255,255,255,0.06);
+    --card2: rgba(255,255,255,0.10);
+    --stroke: rgba(255,255,255,0.10);
+
+    --text: rgba(255,255,255,0.92);
+    --muted: rgba(255,255,255,0.62);
+    --faint: rgba(255,255,255,0.38);
+
+    --inputBg: rgba(255,255,255,0.06);
+    --inputBgFocus: rgba(255,255,255,0.08);
+    --inputStroke: rgba(255,255,255,0.12);
+
+    --btnBg: rgba(255,255,255,0.08);
+    --btnStroke: rgba(255,255,255,0.12);
+
+    --pageBg:
+            radial-gradient(1200px 700px at 10% 0%, rgba(77,163,255,0.18), transparent 55%),
+            radial-gradient(900px 600px at 85% 20%, rgba(184,255,44,0.14), transparent 60%),
+            linear-gradient(180deg, var(--bg0), var(--bg1));
+}
+
+/* LIGHT */
+:root[data-theme="light"]{
+    --bg0:#F6F8FF;
+    --bg1:#EEF3FF;
+
+    --card: rgba(255,255,255,0.75);
+    --card2: rgba(255,255,255,0.92);
+    --stroke: rgba(10,20,40,0.10);
+
+    --text: rgba(8,12,20,0.92);
+    --muted: rgba(8,12,20,0.62);
+    --faint: rgba(8,12,20,0.42);
+
+    --inputBg: rgba(10,20,40,0.06);
+    --inputBgFocus: rgba(10,20,40,0.09);
+    --inputStroke: rgba(10,20,40,0.14);
+
+    --btnBg: rgba(10,20,40,0.06);
+    --btnStroke: rgba(10,20,40,0.12);
+
+    --shadow: 0 16px 50px rgba(10,20,40,0.14);
+    --shadow2: 0 8px 24px rgba(10,20,40,0.10);
+
+    --pageBg:
+            radial-gradient(1200px 700px at 10% 0%, rgba(77,163,255,0.16), transparent 55%),
+            radial-gradient(900px 600px at 85% 20%, rgba(184,255,44,0.12), transparent 60%),
+            linear-gradient(180deg, var(--bg0), var(--bg1));
+}
+
+html, body{
+    height:100%;
+    margin:0;
+    background: var(--pageBg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+*{ box-sizing:border-box; }

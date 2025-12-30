@@ -5,94 +5,119 @@ import (
 	"log/slog"
 	"os"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/leogan-dev/macrofacts/macrofacts-backend/internal/auth"
+	"github.com/leogan-dev/macrofacts/macrofacts-backend/internal/db"
 	"github.com/leogan-dev/macrofacts/macrofacts-backend/internal/foods"
 	"github.com/leogan-dev/macrofacts/macrofacts-backend/internal/httpapi"
+	"github.com/leogan-dev/macrofacts/macrofacts-backend/internal/logs"
 )
 
 func main() {
-	port := envOr("PORT", "8080")
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	})))
 
-	// Postgres
+	port := envOr("PORT", "8080")
 	pgURL := mustEnv("DATABASE_URL")
 
-	// Mongo OFF
 	mongoURI := mustEnv("MONGO_URI")
-	offDB := envOr("OFF_DB", "off")
-	offCol := envOr("OFF_COLLECTION", "products")
-	offSearchMode := envOr("OFF_SEARCH_MODE", "regex") // "regex" (default) or "text"
+	offDB := envOr("OFF_DB", "openfoodfacts")
+	offCollection := envOr("OFF_COLLECTION", "products")
+	offSearchMode := envOr("OFF_SEARCH_MODE", "regex")
 
-	jwtSecret := []byte(mustEnv("JWT_SECRET"))
+	jwtSecret := mustEnv("JWT_SECRET")
 
-	ctx := context.Background()
-
-	// --- Postgres ---
-	pg, err := pgxpool.New(ctx, pgURL)
-	if err != nil {
-		panic(err)
+	if v := envOr("GIN_MODE", ""); v != "" {
+		gin.SetMode(v)
+	} else {
+		gin.SetMode(gin.ReleaseMode)
 	}
-	defer pg.Close()
 
-	// --- Mongo ---
-	mc, err := foods.NewMongoClient(ctx, mongoURI)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	pgPool, err := db.Connect(ctx, pgURL)
 	if err != nil {
-		panic(err)
+		slog.Error("postgres connect failed", "err", err)
+		os.Exit(1)
 	}
-	defer mc.Disconnect(context.Background())
+	defer pgPool.Close()
 
-	// Repos
-	customRepo := foods.NewRepoPostgres(pg)
-	offRepo := foods.NewRepoMongoOFF(mc, offDB, offCol, offSearchMode)
+	// Apply schema on startup (simple dev-friendly behavior)
+	schemaSQLBytes, err := os.ReadFile("cmd/api/schema.sql")
+	if err == nil {
+		if err := db.ApplySchema(ctx, pgPool, string(schemaSQLBytes)); err != nil {
+			slog.Error("apply schema failed", "err", err)
+			os.Exit(1)
+		}
+	} else {
+		slog.Warn("could not read schema.sql, skipping auto-migrate", "err", err)
+	}
 
-	// Service
+	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
+	if err != nil {
+		slog.Error("mongo connect failed", "err", err)
+		os.Exit(1)
+	}
+	defer func() { _ = mongoClient.Disconnect(context.Background()) }()
+
+	offRepo := foods.NewRepoMongoOFF(mongoClient, offDB, offCollection, offSearchMode)
+	customRepo := foods.NewRepoPostgresCustom(pgPool)
+
 	foodsSvc := foods.NewService(offRepo, customRepo)
+	foodsHandler := foods.NewHandler(foodsSvc)
 
-	// Ensure OFF text index (safe to call repeatedly)
+	authSvc := auth.NewService(pgPool, []byte(jwtSecret))
+	authHandler := auth.NewHandler(authSvc)
+
+	logsRepo := logs.NewRepoPostgres(pgPool)
+	logsSvc := logs.NewService(logsRepo, foodsSvc, authSvc)
+	logsHandler := logs.NewHandler(logsSvc)
+
+	// Optional: OFF index (safe no-op if not needed)
 	{
-		cctx, cancel := context.WithTimeout(ctx, 60*time.Second)
-		defer cancel()
-
-		if err := foodsSvc.EnsureOffIndexes(cctx); err != nil {
-			panic(err)
+		idxCtx, idxCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer idxCancel()
+		if err := offRepo.EnsureTextIndex(idxCtx); err != nil {
+			slog.Warn("OFF EnsureTextIndex failed", "err", err, "mode", offSearchMode)
 		}
 	}
 
-	foodsHandler := foods.NewHandler(foodsSvc)
-	authSvc := auth.NewService(pg, jwtSecret)
-	authHandler := auth.NewHandler(authSvc)
-
-	// --- HTTP ---
-	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
-	r.Use(gin.Recovery())
-	logger := slog.Default()
 	r.Use(httpapi.RequestIDMiddleware())
-	r.Use(httpapi.LoggerMiddleware(logger))
-
-	r.GET("/api/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok", "message": "Server is running"})
-	})
+	r.Use(httpapi.LoggerMiddleware(slog.Default()))
+	r.Use(gin.Recovery())
 
 	api := r.Group("/api")
 
-	// Auth
+	api.GET("/health", func(c *gin.Context) { c.JSON(200, gin.H{"ok": true}) })
+
 	api.POST("/auth/register", authHandler.Register)
 	api.POST("/auth/login", authHandler.Login)
-	api.GET("/me", authSvc.Middleware(), authHandler.Me)
 
-	// Foods: public read endpoints
-	foodsHandler.RegisterRoutes(api)
+	authRequired := authSvc.Middleware()
 
-	// Foods: protect create endpoint
-	// (Handler already checks, but middleware makes it consistent.)
-	api.POST("/foods", authSvc.Middleware(), foodsHandler.CreateCustom)
+	api.GET("/me", authRequired, authHandler.Me)
+	api.GET("/me/settings", authRequired, authHandler.MeSettings)
+	api.PATCH("/me/settings", authRequired, authHandler.UpdateSettings)
 
+	api.GET("/foods/search", foodsHandler.Search)
+	api.GET("/foods/barcode/:code", foodsHandler.ByBarcode)
+	api.POST("/foods", authRequired, foodsHandler.CreateCustom)
+
+	api.GET("/logs/today", authRequired, logsHandler.Today)
+	api.POST("/logs/entries", authRequired, logsHandler.CreateEntry)
+
+	slog.Info("api listening", "port", port)
 	if err := r.Run(":" + port); err != nil {
-		panic(err)
+		slog.Error("server failed", "err", err)
+		os.Exit(1)
 	}
 }
 

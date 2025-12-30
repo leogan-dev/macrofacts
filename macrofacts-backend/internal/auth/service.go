@@ -2,118 +2,77 @@ package auth
 
 import (
 	"context"
-	"crypto/subtle"
 	"errors"
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
-	db        *pgxpool.Pool
+	repo      *Repo
 	jwtSecret []byte
 }
 
-func NewService(db *pgxpool.Pool, jwtSecret []byte) *Service {
-	return &Service{db: db, jwtSecret: jwtSecret}
+func NewService(pg *pgxpool.Pool, jwtSecret []byte) *Service {
+	return &Service{
+		repo:      NewRepo(pg),
+		jwtSecret: jwtSecret,
+	}
 }
 
 func (s *Service) Register(username, password string) error {
-	username = strings.TrimSpace(username)
-	if len(username) < 3 || len(username) > 32 {
-		return errors.New("username must be 3-32 chars")
+	u, err := CanonicalizeUsername(username)
+	if err != nil {
+		return ErrUsernameInvalid
 	}
 	if len(password) < 8 || len(password) > 128 {
-		return errors.New("password must be 8-128 chars")
+		return ErrPasswordInvalid
 	}
 
-	hashBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	pwHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return errors.New("failed to hash password")
 	}
 
-	_, err = s.db.Exec(
-		contextOrBackground(),
-		`insert into users (username, password_hash) values ($1, $2)`,
-		username, string(hashBytes),
-	)
+	_, err = s.repo.CreateUser(context.Background(), u, string(pwHash))
+	return err
+}
+
+func (s *Service) Login(username, password string) (string, error) {
+	u, err := CanonicalizeUsername(username)
 	if err != nil {
-		return errors.New("username already exists")
+		return "", errors.New("invalid credentials")
 	}
-	return nil
+
+	user, err := s.repo.GetUserByUsername(context.Background(), u)
+	if err != nil {
+		return "", errors.New("invalid credentials")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+		return "", errors.New("invalid credentials")
+	}
+
+	return IssueToken(s.jwtSecret, user.ID, user.Username, time.Now().Add(7*24*time.Hour))
 }
 
-func (s *Service) Login(username, password string) (token string, userID string, cleanUsername string, err error) {
-	username = strings.TrimSpace(username)
-
-	var id string
-	var un string
-	var hash string
-
-	e := s.db.QueryRow(contextOrBackground(),
-		`select id::text, username, password_hash from users where username = $1`,
-		username,
-	).Scan(&id, &un, &hash)
-
-	if e != nil {
-		_ = bcrypt.CompareHashAndPassword([]byte(fakeBcryptHash()), []byte(password))
-		return "", "", "", errors.New("invalid credentials")
+func (s *Service) ParseToken(raw string) (string, string, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return "", "", errors.New("missing token")
 	}
-
-	if e := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)); e != nil {
-		return "", "", "", errors.New("invalid credentials")
-	}
-
-	tok, e := s.makeJWT(id, un)
-	if e != nil {
-		return "", "", "", errors.New("failed to sign token")
-	}
-
-	return tok, id, un, nil
+	return ParseToken(s.jwtSecret, raw)
 }
 
-func (s *Service) makeJWT(userID, username string) (string, error) {
-	now := time.Now()
-	claims := jwt.MapClaims{
-		"sub":      userID,
-		"username": username,
-		"iat":      now.Unix(),
-		"exp":      now.Add(14 * 24 * time.Hour).Unix(),
-	}
-	tok := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return tok.SignedString(s.jwtSecret)
+func (s *Service) GetSettings(userID string) (MeSettingsResponse, error) {
+	return s.repo.GetSettings(context.Background(), userID)
 }
 
-func (s *Service) ParseToken(raw string) (userID string, username string, err error) {
-	claims := jwt.MapClaims{}
-	tok, err := jwt.ParseWithClaims(raw, claims, func(token *jwt.Token) (any, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("unexpected signing method")
-		}
-		return s.jwtSecret, nil
-	})
-	if err != nil || !tok.Valid {
-		return "", "", errors.New("invalid token")
+func (s *Service) UpdateSettings(userID string, req UpdateSettingsRequest) (MeSettingsResponse, error) {
+	if err := s.repo.UpsertSettings(context.Background(), userID, req); err != nil {
+		return MeSettingsResponse{}, err
 	}
-
-	uid, _ := claims["sub"].(string)
-	un, _ := claims["username"].(string)
-
-	if subtle.ConstantTimeEq(int32(len(uid)), 0) == 1 || subtle.ConstantTimeEq(int32(len(un)), 0) == 1 {
-		return "", "", errors.New("invalid token")
-	}
-
-	return uid, un, nil
-}
-
-// keep behavior stable even without request ctx for now
-func contextOrBackground() context.Context {
-	return context.Background()
-}
-
-func fakeBcryptHash() string {
-	return "$2a$10$yAq4qfJc6Q7xjYHcqJq3gO9YorQWQm/1cSx4xV6qY9tUqQf2mFq1S"
+	return s.repo.GetSettings(context.Background(), userID)
 }

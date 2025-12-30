@@ -23,7 +23,7 @@ type OffFoodDoc struct {
 }
 
 type RepoMongoOFF struct {
-	col *mongo.Collection
+	col        *mongo.Collection
 	searchMode string // "regex" or "text"
 }
 
@@ -184,7 +184,7 @@ func (r *RepoMongoOFF) SearchByNameOrBrand(ctx context.Context, q string, limit 
 
 	cur, err := r.col.Find(ctx, filter, opts)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer cur.Close(ctx)
 

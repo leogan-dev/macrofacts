@@ -2,44 +2,26 @@ package foods
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 )
 
-type OffRepository interface {
-	EnsureTextIndex(ctx context.Context) error
-	ByBarcode(ctx context.Context, code string) (*OffFoodDoc, error)
-	SearchByNameOrBrand(ctx context.Context, q string, limit int, cursor string) ([]OffFoodDoc, *string, error)
-}
-
-type CustomRepository interface {
-	Create(ctx context.Context, createdByUserID string, req CreateFoodRequest) (FoodDTO, error)
-	ByBarcode(ctx context.Context, code string) (*FoodDTO, error)
-	Search(ctx context.Context, q string, limit int) ([]FoodDTO, error)
-}
-
 type Service struct {
-	offRepo    OffRepository
-	customRepo CustomRepository
-	offBarcodeCache *barcodeCache
+	offRepo    *RepoMongoOFF
+	customRepo *RepoPostgresCustom
+	cache      *barcodeCache
 }
 
-func NewService(offRepo OffRepository, customRepo CustomRepository) *Service {
-	svc := &Service{offRepo: offRepo, customRepo: customRepo}
-	if offRepo != nil {
-		svc.offBarcodeCache = newBarcodeCache(10000, 24*time.Hour, 10*time.Minute)
+func NewService(offRepo *RepoMongoOFF, customRepo *RepoPostgresCustom) *Service {
+	return &Service{
+		offRepo:    offRepo,
+		customRepo: customRepo,
+		// Big enough to be useful, small enough to be boring
+		cache: newBarcodeCache(10000, 24*time.Hour, 30*time.Minute),
 	}
-	return svc
 }
 
-func (s *Service) EnsureOffIndexes(ctx context.Context) error {
-	if s.offRepo == nil {
-		return nil
-	}
-	return s.offRepo.EnsureTextIndex(ctx)
-}
-
-// Search: prefer custom foods first, then OFF.
 func (s *Service) Search(ctx context.Context, q string, limit int, cursor string) ([]FoodDTO, *string, error) {
 	q = strings.TrimSpace(q)
 	if q == "" {
@@ -49,87 +31,60 @@ func (s *Service) Search(ctx context.Context, q string, limit int, cursor string
 		limit = 25
 	}
 
-	out := make([]FoodDTO, 0, limit)
-
-	// 1) custom foods
-	if s.customRepo != nil {
-		custom, err := s.customRepo.Search(ctx, q, limit)
-		if err != nil {
-			return nil, nil, err
-		}
-		out = append(out, custom...)
-		if len(out) >= limit {
-			return out[:limit], nil, nil
-		}
+	docs, next, err := s.offRepo.SearchByNameOrBrand(ctx, q, limit, cursor)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	// 2) OFF foods
-	if s.offRepo != nil {
-		offDocs, next, err := s.offRepo.SearchByNameOrBrand(ctx, q, limit-len(out), cursor)
-		if err != nil {
-			return nil, nil, err
-		}
-		for _, d := range offDocs {
-			dto := offDocToDTO(d)
-			out = append(out, dto)
-			if len(out) >= limit {
-				break
-			}
-		}
-		return out, next, nil
+	out := make([]FoodDTO, 0, len(docs))
+	for _, d := range docs {
+		dto := offDocToDTO(d)
+		out = append(out, dto)
 	}
-
-	return out, nil, nil
+	return out, next, nil
 }
 
-// ByBarcode: prefer custom food (user override), else OFF.
 func (s *Service) ByBarcode(ctx context.Context, code string) (*FoodDTO, error) {
 	code = strings.TrimSpace(code)
 	if code == "" {
 		return nil, nil
 	}
 
-	// 1) custom
-	if s.customRepo != nil {
-		dto, err := s.customRepo.ByBarcode(ctx, code)
-		if err != nil {
-			return nil, err
-		}
-		if dto != nil {
-			return dto, nil
-		}
+	// Cache hit (including cached not-found)
+	if dto, ok := s.cache.get(code); ok {
+		return dto, nil
 	}
 
-	// Cached OFF lookup
-	if s.offBarcodeCache != nil {
-		if dto, ok := s.offBarcodeCache.get(code); ok {
-			return dto, nil
-		}
-	}
-
-	// 2) OFF
-	if s.offRepo != nil {
-		doc, err := s.offRepo.ByBarcode(ctx, code)
-		if err != nil {
-			if IsNotFound(err) {
-				if s.offBarcodeCache != nil {
-					s.offBarcodeCache.setNotFound(code)
-				}
-				return nil, nil
-			}
-			return nil, err
-		}
+	// 1) OFF first
+	doc, err := s.offRepo.ByBarcode(ctx, code)
+	if err == nil && doc != nil {
 		dto := offDocToDTO(*doc)
-		if s.offBarcodeCache != nil {
-			copy := dto
-			s.offBarcodeCache.set(code, &copy)
-		}
+		s.cache.set(code, &dto)
 		return &dto, nil
 	}
 
+	// 2) Custom by barcode
+	custom, err2 := s.customRepo.ByBarcode(ctx, code)
+	if err2 == nil && custom != nil {
+		s.cache.set(code, custom)
+		return custom, nil
+	}
+
+	s.cache.setNotFound(code)
 	return nil, nil
 }
 
 func (s *Service) CreateCustom(ctx context.Context, userID string, req CreateFoodRequest) (FoodDTO, error) {
+	if userID == "" {
+		return FoodDTO{}, errors.New("unauthorized")
+	}
 	return s.customRepo.Create(ctx, userID, req)
+}
+
+func (s *Service) ByCustomID(ctx context.Context, id string) (FoodDTO, error) {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return FoodDTO{}, errors.New("missing id")
+	}
+	return s.customRepo.ByID(ctx, id)
 }
