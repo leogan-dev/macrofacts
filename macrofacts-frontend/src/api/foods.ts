@@ -1,5 +1,8 @@
+// src/api/foods.ts
 import { apiFetch } from "./client";
-import type { FoodSearchResponse, FoodDTO } from "./types";
+import type { FoodSearchResponse, FoodDTO, CreateCustomFoodRequest } from "./types";
+
+type ItemResponse = { item: FoodDTO | null };
 
 export async function searchFoods(q: string, limit = 20, cursor?: string | null): Promise<FoodSearchResponse> {
     const params = new URLSearchParams();
@@ -10,5 +13,16 @@ export async function searchFoods(q: string, limit = 20, cursor?: string | null)
 }
 
 export async function getFoodByBarcode(code: string): Promise<FoodDTO> {
-    return apiFetch<FoodDTO>(`/api/foods/barcode/${encodeURIComponent(code)}`);
+    const res = await apiFetch<ItemResponse>(`/api/foods/barcode/${encodeURIComponent(code)}`);
+    if (!res.item) throw new Error("Not found");
+    return res.item;
+}
+
+export async function createCustomFood(req: CreateCustomFoodRequest): Promise<FoodDTO> {
+    const res = await apiFetch<ItemResponse>(`/api/foods/custom`, {
+        method: "POST",
+        body: JSON.stringify(req),
+    });
+    if (!res.item) throw new Error("Create failed");
+    return res.item;
 }

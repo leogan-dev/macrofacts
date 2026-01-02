@@ -16,7 +16,6 @@
     align-items:center;
     gap: 12px;
     margin-bottom: 14px;
-    position: relative;
 }
 
 .brandMark{
@@ -35,17 +34,6 @@
     font-weight: 800;
 }
 
-.themeFab{
-    margin-left: auto;
-    border: 1px solid var(--stroke);
-    background: rgba(255,255,255,0.06);
-    color: var(--text);
-    width: 40px;
-    height: 40px;
-    border-radius: 14px;
-    cursor: pointer;
-}
-
 .card{
     background: linear-gradient(180deg, var(--card2), var(--card));
     border: 1px solid var(--stroke);
@@ -54,27 +42,22 @@
     backdrop-filter: blur(12px);
 }
 
-.authCard{
-    padding: 18px;
+
+.cardPad{
+    padding: 22px;
 }
 
-.authHead{
-    margin-bottom: 12px;
+.h1{
+    margin: 0;
+    font-size: 28px;
+    letter-spacing: -0.6px;
 }
 
-.authTitle{
-    font-size: 20px;
-    font-weight: 850;
-    letter-spacing: 0.2px;
-    color: var(--text);
-}
-
-.authSub{
-    margin-top: 6px;
-}
-
-.muted{
+.sub{
+    margin: 8px 0 0 0;
     color: var(--muted);
+    line-height: 1.45;
+    font-size: 14px;
 }
 
 .sep{
@@ -87,516 +70,1767 @@
     display:block;
     font-size: 13px;
     color: var(--muted);
-    margin-bottom: 6px;
-}
-
-.form{
-    display:flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.field{
-    display:flex;
-    flex-direction: column;
+    margin: 0 0 8px 2px;
 }
 
 .input{
-    width: 100%;
+    width:100%;
     padding: 12px 12px;
     border-radius: 14px;
-    border: 1px solid var(--stroke);
-    background: rgba(0,0,0,0.18);
+    background: var(--inputBg);
+    border: 1px solid var(--inputStroke);
     color: var(--text);
     outline: none;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+    transition: border-color .12s ease, background .12s ease, transform .12s ease;
 }
 
-[data-theme="light"] .input{
-    background: rgba(255,255,255,0.75);
+.input:focus{
+    border-color: rgba(184,255,44,0.65);
+    background: var(--inputBgFocus);
+    transform: translateY(-1px);
 }
 
-.select{
-    width: 100%;
-    padding: 12px 12px;
-    border-radius: 14px;
-    border: 1px solid var(--stroke);
-    background: rgba(0,0,0,0.18);
-    color: var(--text);
-    outline: none;
-}
 
-[data-theme="light"] .select{
-    background: rgba(255,255,255,0.75);
-}
-
-.hint{
-    margin: 8px 0 0 0;
-    color: var(--muted);
-    line-height: 1.45;
-    font-size: 13px;
+.input:focus{
+    border-color: rgba(184,255,44,0.65);
+    background: rgba(255,255,255,0.08);
+    transform: translateY(-1px);
 }
 
 .btn{
-    margin-top: 8px;
-    padding: 12px 14px;
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.10);
-    background:
-            linear-gradient(135deg, rgba(184,255,44,0.95), rgba(77,163,255,0.95));
-    color: rgba(8,12,18,0.95);
-    font-weight: 900;
-    cursor: pointer;
-    box-shadow: var(--shadow2);
-}
-
-.btn:disabled{
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.btn.ghost{
-    background: rgba(255,255,255,0.06);
-    color: var(--text);
-    border: 1px solid var(--stroke);
-    box-shadow: none;
-}
-
-.btn.small{
-    padding: 10px 12px;
+    width: 100%;
+    border:0;
     border-radius: 14px;
-    font-weight: 850;
+    padding: 12px 14px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    color: rgba(0,0,0,0.90);
+    background: var(--btnBg);
+    border: 1px solid var(--btnStroke);
+    box-shadow: var(--shadow2);
+    cursor:pointer;
+    transition: transform .12s ease, filter .12s ease, opacity .12s ease;
+}
+
+.btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+.btn:active{ transform: translateY(0px); }
+.btn:disabled{ opacity: 0.55; cursor: not-allowed; transform: none; }
+
+.btnPrimary{
+    background: linear-gradient(135deg, var(--volt), var(--blue));
+    border-color: rgba(255,255,255,0.18);
+}
+
+/* small row under button */
+.row{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 12px;
 }
 
 .linkBtn{
-    padding: 0;
-    border: none;
+    border:0;
     background: transparent;
-    color: var(--accent);
-    cursor: pointer;
-    font-weight: 800;
+    color: rgba(255,255,255,0.88);
+    cursor:pointer;
+    font-weight: 750;
+    padding: 6px 8px;
+    border-radius: 10px;
+}
+.linkBtn:hover{
+    background: rgba(255,255,255,0.06);
 }
 
-.switchRow{
-    margin-top: 10px;
-    text-align: center;
-}
-
-.errorText{
-    margin: 10px 0;
+.errBox{
+    margin-top: 12px;
     padding: 10px 12px;
     border-radius: 14px;
-    border: 1px solid rgba(255, 80, 80, 0.35);
-    background: rgba(255, 80, 80, 0.08);
-    color: var(--text);
-    font-weight: 700;
+    border: 1px solid rgba(255,59,107,0.40);
+    background: rgba(255,59,107,0.12);
+    color: rgba(255,255,255,0.92);
+    font-size: 13px;
+    line-height: 1.35;
 }
 
-.footNote{
+.errInline{
+    margin-top: 8px;
+    color: rgba(255,170,195,0.98);
+    font-size: 12px;
+}
+
+/* tiny footer note */
+.note{
     margin-top: 14px;
+    color: var(--faint);
+    font-size: 12px;
     text-align: center;
-    font-size: 13px;
 }
 
-/* =========================
-   Dashboard
-   ========================= */
-
-.dash{
-    min-height: 100vh;
-    padding: 22px;
-    max-width: 1100px;
-    margin: 0 auto;
-}
-
-.dashTop{
-    display:flex;
-    align-items:center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.dashBrand{
-    display:flex;
-    align-items:center;
-    gap: 12px;
-}
-
-.dashTitle{
-    font-size: 22px;
-    font-weight: 900;
-    color: var(--text);
-}
-
-.dashSubtitle{
-    font-size: 13px;
-    color: var(--muted);
-    margin-top: 2px;
-}
-
-.dashTopRight{
-    display:flex;
-    align-items:center;
-    gap: 10px;
-}
-
-.iconBtn{
-    width: 40px;
-    height: 40px;
-    border-radius: 14px;
+.themeToggle{
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
     border: 1px solid var(--stroke);
     background: rgba(255,255,255,0.06);
-    color: var(--text);
-    cursor: pointer;
-}
-
-.dashGrid{
-    display:grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 14px;
-    margin-bottom: 14px;
-}
-
-@media (max-width: 860px){
-    .dashGrid{
-        grid-template-columns: 1fr;
-    }
-}
-
-.dashCard{
-    padding: 16px;
-}
-
-.heroTop{
-    display:flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
-}
-
-.heroLabel{
-    font-size: 14px;
-    font-weight: 900;
-    color: var(--text);
-    letter-spacing: 0.2px;
-}
-
-.heroMeta{
-    font-size: 13px;
-    color: var(--muted);
-    display:flex;
-    align-items:center;
-    gap: 8px;
-}
-
-.dot{
-    opacity: 0.5;
-}
-
-.heroNumber{
-    margin-top: 12px;
-    display:flex;
-    align-items: baseline;
-    gap: 8px;
-}
-
-.heroBig{
-    font-size: 56px;
-    font-weight: 950;
-    letter-spacing: -0.6px;
-    color: var(--text);
-}
-
-.heroUnit{
-    font-size: 16px;
-    font-weight: 850;
-    color: var(--muted);
-}
-
-.macros{
-    display:flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.macroRow{
-    display:flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.macroTop{
-    display:flex;
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow2);
+    display: flex;
     align-items: center;
-    justify-content: space-between;
-}
-
-.macroLabel{
-    font-weight: 900;
+    justify-content: center;
+    cursor: pointer;
     color: var(--text);
-    font-size: 14px;
+    transition: transform .15s ease, background .15s ease, border-color .15s ease;
+    z-index: 50;
 }
 
-.macroNums{
-    font-size: 13px;
+.themeToggle:hover{
+    transform: translateY(-2px) rotate(6deg);
+    background: rgba(255,255,255,0.10);
 }
 
-.bar{
-    height: 10px;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--stroke);
-    overflow: hidden;
+.themeToggle:active{
+    transform: translateY(0px) scale(0.96);
 }
 
-.barFill{
-    height: 100%;
-    border-radius: 999px;
-    background: linear-gradient(135deg, rgba(184,255,44,0.95), rgba(77,163,255,0.95));
+.themeToggle svg{
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
 }
 
-.actions{
-    display:flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 14px;
+/* ========================================================================== */
+/* Today Dashboard (scoped) — premium sporty look (MacroFactor/Nike vibe)      */
+/* IMPORTANT: This section must be appended to ui.css. It only targets .dash. */
+/* ========================================================================== */
+
+.dash {
+    /* Layout */
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: clamp(16px, 2.2vw, 28px);
+
+    /* Local design tokens */
+    --dash-bg: var(--bg0, #0b0f14);
+    --dash-panel: var(--card);
+    --dash-panel-2: var(--card2);
+
+    --dash-text: var(--text);
+    --dash-muted: var(--muted);
+    --dash-faint: var(--faint);
+
+    --dash-border: var(--stroke);
+    --dash-border-2: rgba(255, 255, 255, 0.14);
+
+    --dash-shadow: var(--shadow);
+    --dash-shadow-soft: var(--shadow2);
+
+    --dash-radius: var(--r-lg);
+    --dash-radius-sm: var(--r-md);
+
+    --dash-gap: clamp(12px, 1.6vw, 18px);
+
+    /* Accent (use your actual theme tokens) */
+    --dash-accent: var(--volt);
+    --dash-accent-2: var(--blue);
+
 }
 
-.dashMeals{
-    display:grid;
-    grid-template-columns: repeat(2, 1fr);
+.dash :where(h1, h2, h3, p, span, div, small, strong) {
+    color: var(--dash-text);
+}
+
+.dash :where(a) {
+    color: inherit;
+}
+
+.dash :where(.muted) {
+    color: var(--dash-muted);
+}
+
+/* ---------- Header: "Today" + date ---------- */
+.dash .dashHeader {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
     gap: 14px;
-    margin-bottom: 14px;
+    margin-bottom: var(--dash-gap);
 }
 
-@media (max-width: 860px){
-    .dashMeals{
-        grid-template-columns: 1fr;
-    }
+.dash .dashHeaderTitle {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
 }
 
-.mealHead{
-    display:flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 12px;
+.dash .dashHeaderTitle :where(h1) {
+    font-size: clamp(22px, 2.2vw, 28px);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin: 0;
 }
 
-.mealTitle{
-    font-weight: 950;
-    letter-spacing: 0.4px;
-    color: var(--text);
-    font-size: 14px;
-}
-
-.mealTotals{
+.dash .dashHeaderTitle .dashDate {
     font-size: 13px;
-    color: var(--muted);
-    display:flex;
-    align-items:center;
-    gap: 8px;
+    color: var(--dash-muted);
+    letter-spacing: 0.02em;
+}
+
+.dash .dashHeaderRight {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     flex-wrap: wrap;
     justify-content: flex-end;
 }
 
-.empty{
-    padding: 12px;
-    border-radius: 14px;
-    border: 1px dashed rgba(255,255,255,0.16);
-    color: var(--muted);
-    background: rgba(255,255,255,0.04);
+/* ---------- Base card (Today-only) ---------- */
+.dash .dashCard {
+    background: linear-gradient(180deg, var(--dash-panel), rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--dash-border);
+    border-radius: var(--dash-radius);
+    box-shadow: var(--dash-shadow-soft);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
-.entries{
-    display:flex;
-    flex-direction: column;
+.dash .dashCardInner {
+    padding: clamp(14px, 2vw, 18px);
+}
+
+.dash .dashCardTitleRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.dash .dashCardTitleRow :where(h2) {
+    margin: 0;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dash-muted);
+}
+
+/* ---------- Page grid ---------- */
+.dash .dashGrid {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap: var(--dash-gap);
+}
+
+@media (max-width: 940px) {
+    .dash .dashGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---------- Hero ---------- */
+.dash .hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--dash-radius);
+}
+
+.dash .hero::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background:
+            radial-gradient(800px 300px at 10% 0%, rgba(184,255,44,0.18) 0%, transparent 60%),
+            radial-gradient(700px 300px at 100% 40%, rgba(77,163,255,0.18) 0%, transparent 60%);
+    pointer-events: none;
+    opacity: 0.9;
+}
+
+.dash .hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+            linear-gradient(180deg, rgba(0, 0, 0, 0.00), rgba(0, 0, 0, 0.22));
+    pointer-events: none;
+}
+
+.dash .hero .dashCardInner {
+    position: relative;
+    z-index: 1;
+    padding: clamp(18px, 2.4vw, 22px);
+}
+
+.dash .heroTop {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.dash .heroLabel {
+    font-size: 13px;
+    color: var(--dash-muted);
+    letter-spacing: 0.02em;
+}
+
+.dash .heroMain {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    align-items: end;
+}
+
+@media (max-width: 520px) {
+    .dash .heroMain {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dash .heroBigNumber {
+    font-size: clamp(44px, 6vw, 64px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    margin: 0;
+}
+
+.dash .heroSubRow {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.dash .heroPill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--dash-border);
+    color: var(--dash-muted);
+    font-size: 13px;
+}
+
+.dash .heroPill strong {
+    color: var(--dash-text);
+    font-weight: 600;
+}
+
+/* ---------- Macro bars ---------- */
+.dash .macroGrid {
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 10px;
 }
 
-.entryRow{
-    display:flex;
+.dash .macroRow {
+    display: grid;
+    grid-template-columns: 84px 1fr auto;
     align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--dash-radius-sm);
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.dash .macroName {
+    font-size: 13px;
+    color: var(--dash-muted);
+    letter-spacing: 0.02em;
+}
+
+.dash .macroVal {
+    font-size: 13px;
+    color: var(--dash-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.dash .barTrack {
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.dash .barFill {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--dash-accent), var(--dash-accent-2));
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+    transition: width 260ms ease;
+}
+
+/* Protein */
+.dash .macroRow[data-macro="protein"] .barFill{
+    background: linear-gradient(90deg, var(--volt), rgba(184,255,44,0.65));
+}
+
+/* Carbs */
+.dash .macroRow[data-macro="carbs"] .barFill{
+    background: linear-gradient(90deg, var(--blue), rgba(77,163,255,0.65));
+}
+
+/* Fat */
+.dash .macroRow[data-macro="fat"] .barFill{
+    background: linear-gradient(90deg, rgba(255,204,102,1), rgba(255,204,102,0.6));
+}
+
+
+/* ---------- Quick actions (Today-only buttons) ---------- */
+/* Do NOT touch global .btn. Use these variants inside .dash. */
+.dash .actionsRow {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+@media (max-width: 520px) {
+    .dash .actionsRow {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dash .btnPrimary,
+.dash .btnSecondary {
+    appearance: none;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    padding: 12px 14px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 120ms ease, filter 120ms ease, background 120ms ease, border-color 120ms ease, opacity 120ms ease;
+    width: 100%;
+}
+
+.dash .btnPrimary {
+    color: rgba(0, 0, 0, 0.92);
+    background: linear-gradient(90deg, var(--dash-accent), var(--dash-accent-2));
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+}
+
+.dash .btnSecondary {
+    color: var(--dash-text);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dash .btnPrimary:hover,
+.dash .btnSecondary:hover {
+    filter: brightness(1.04);
+    transform: translateY(-1px);
+}
+
+.dash .btnPrimary:active,
+.dash .btnSecondary:active {
+    transform: translateY(0px);
+    filter: brightness(0.98);
+}
+
+.dash .btnPrimary:focus-visible,
+.dash .btnSecondary:focus-visible {
+    outline: 2px solid rgba(77,163,255,0.65);
+    outline-offset: 2px;
+}
+
+.dash .btnPrimary[disabled],
+.dash .btnSecondary[disabled],
+.dash .btnPrimary[aria-disabled="true"],
+.dash .btnSecondary[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.55;
+    filter: grayscale(0.15);
+    transform: none;
+}
+
+.dash .btnDisabledHint {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--dash-faint);
+}
+
+/* ---------- Meals grid ---------- */
+.dash .mealGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+@media (max-width: 520px) {
+    .dash .mealGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dash .mealTile {
+    padding: 12px 12px;
+    border-radius: var(--dash-radius-sm);
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+    min-height: 92px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.dash .mealTile:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.055);
+}
+
+.dash .mealTop {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.dash .mealName {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.dash .mealKcal {
+    color: var(--dash-muted);
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.dash .mealEmpty {
+    color: var(--dash-faint);
+    font-size: 13px;
+    line-height: 1.3;
+}
+
+.dash .mealCtaRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.dash .mealCta {
+    font-size: 12px;
+    color: var(--dash-muted);
+}
+
+.dash .mealChip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    color: var(--dash-muted);
+    font-size: 12px;
+}
+
+/* ---------- Optional: recent foods list ---------- */
+.dash .list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dash .listItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.045);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    cursor: pointer;
+    transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.dash .listItem:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.055);
+}
+
+.dash .listLeft {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.dash .listTitle {
+    font-weight: 650;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash .listSub {
+    font-size: 12px;
+    color: var(--dash-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash .listRight {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--dash-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* ---------- Micro polish helpers ---------- */
+.dash .divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.10);
+    margin: 12px 0;
+}
+
+.dash .srOnly {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ========================================================================== */
+/* Today Dashboard (scoped v2) — uses existing TodayPage.tsx classnames         */
+/* Goal: premium sporty dashboard WITHOUT affecting Auth (Auth is outside .dash)*/
+/* ========================================================================== */
+
+.dash{
+    min-height: 100vh;
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: clamp(16px, 2.2vw, 28px);
+}
+
+/* Top bar */
+.dash .dashTop{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.dash .dashTopLeft{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.dash .logoMark{
+    width: 42px;
+    height: 42px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--volt), var(--blue));
+    box-shadow: var(--shadow2);
+    flex: 0 0 auto;
+}
+
+.dash .dashTitle{
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    font-weight: 900;
+    margin: 0;
+    line-height: 1.05;
+}
+
+.dash .dashSub{
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+}
+
+.dash .dashTopRight{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+/* Icon button (theme) */
+.dash .iconBtn{
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    border: 1px solid var(--stroke);
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow2);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    color: var(--text);
+    font-weight: 900;
+    transition: transform .15s ease, background .15s ease, border-color .15s ease, filter .15s ease;
+    user-select: none;
+}
+
+.dash .iconBtn:hover{
+    transform: translateY(-2px) rotate(4deg);
+    background: rgba(255,255,255,0.10);
+    filter: brightness(1.03);
+}
+
+.dash .iconBtn:active{
+    transform: translateY(0px) scale(0.98);
+}
+
+.dash .iconBtn:focus-visible{
+    outline: 2px solid rgba(77,163,255,0.65);
+    outline-offset: 2px;
+}
+
+/* IMPORTANT: global .btn is full-width for Auth; in Today we override locally */
+.dash .dashTopRight .btn{
+    width: auto;
+    padding: 10px 12px;
+    min-height: 42px;
+    border-radius: 14px;
+}
+
+/* Cards (Today uses .card without .cardPad) */
+.dash .card{
+    padding: 18px;
+    border-radius: var(--r-lg);
+    margin: 12px;
+}
+
+@media (max-width: 520px){
+    .dash .card{ padding: 16px; }
+}
+
+/* Error card (Today-only polish) */
+.dash .cardError{
+    border-color: rgba(255,59,107,0.40);
+    background:
+            linear-gradient(180deg, rgba(255,59,107,0.14), rgba(255,255,255,0.02)),
+            linear-gradient(180deg, var(--card2), var(--card));
+}
+
+.dash .cardErrorTitle{
+    font-weight: 850;
+    margin-bottom: 10px;
+}
+
+/* Hero */
+.dash .hero{
+    position: relative;
+    overflow: hidden;
+}
+
+.dash .hero::before{
+    content:"";
+    position:absolute;
+    inset: -2px;
+    background:
+            radial-gradient(1100px 420px at 12% 0%, rgba(77,163,255,0.20), transparent 55%),
+            radial-gradient(1000px 520px at 92% 30%, rgba(184,255,44,0.14), transparent 60%);
+    pointer-events:none;
+}
+
+.dash .hero::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.00), rgba(0,0,0,0.22));
+    pointer-events:none;
+}
+
+.dash .hero > *{
+    position: relative;
+    z-index: 1;
+}
+
+.dash .heroTop{
+    display:grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+        "label value"
+        "sub   value";
+    gap: 6px 14px;
+    align-items: end;
+    margin-bottom: 14px;
+}
+
+.dash .heroLabel{
+    grid-area: label;
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+}
+
+.dash .heroValue{
+    grid-area: value;
+    font-size: clamp(44px, 6vw, 64px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    font-weight: 950;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.dash .heroSub{
+    grid-area: sub;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+@media (max-width: 520px){
+    .dash .heroTop{
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "label"
+            "value"
+            "sub";
+    }
+    .dash .heroValue{ text-align: left; }
+}
+
+/* Macro bars (matches TodayPage MacroBar markup) */
+.dash .macroGrid{
+    display:grid;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.dash .macro{
+    padding: 10px 12px;
+    border-radius: var(--r-md);
+    background: rgba(255,255,255,0.045);
+    border: 1px solid rgba(255,255,255,0.09);
+}
+
+.dash .macroTop{
+    display:flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.dash .macroLabel{
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+    font-weight: 750;
+}
+
+.dash .macroValue{
+    font-size: 13px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.dash .bar{
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.10);
+    overflow:hidden;
+}
+
+.dash .barFill{
+    height:100%;
+    width: 0%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--volt), var(--blue));
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.10) inset;
+    transition: width 260ms ease;
+}
+
+/* Quick actions (keeps global .btn intact; uses Today-only tweaks) */
+.dash .quickActions{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 14px;
+}
+
+@media (max-width: 520px){
+    .dash .quickActions{ grid-template-columns: 1fr; }
+}
+
+/* Today-only button sizing (global .btn stays for Auth) */
+.dash .quickActions .btn,
+.dash .quickActions .btnPrimary{
+    width: 100%;
+    min-height: 46px;
+}
+
+/* Today-only primary shine (Auth .btnPrimary remains unchanged elsewhere) */
+.dash .quickActions .btnPrimary{
+    background: linear-gradient(135deg, var(--volt), var(--blue));
+    box-shadow: 0 14px 34px rgba(0,0,0,0.35);
+}
+
+.dash .quickActions .btn:disabled,
+.dash .quickActions .btnPrimary:disabled{
+    opacity: 0.58;
+    filter: grayscale(0.15);
+}
+
+/* Section title */
+.dash .sectionTitle{
+    font-size: 14px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 12px 0;
+    font-weight: 850;
+}
+
+/* Meals grid */
+.dash .mealGrid{
+    display:grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+@media (max-width: 520px){
+    .dash .mealGrid{ grid-template-columns: 1fr; }
+}
+
+.dash .meal{
+    padding: 12px;
+    border-radius: var(--r-md);
+    background: rgba(255,255,255,0.045);
+    border: 1px solid rgba(255,255,255,0.09);
+    transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    min-height: 120px;
+}
+
+.dash .meal:hover{
+    transform: translateY(-1px);
+    border-color: rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.055);
+}
+
+.dash .mealTitle{
+    font-weight: 900;
+    letter-spacing: -0.2px;
+    margin-bottom: 10px;
+}
+
+.dash .mutedSmall{
+    font-size: 12px;
+    color: var(--muted);
+}
+
+/* Meal list rows */
+.dash .mealList{
+    display:flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.dash .mealRow{
+    display:flex;
+    align-items:center;
     justify-content: space-between;
     gap: 10px;
     padding: 10px 10px;
     border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.08);
-    background: rgba(0,0,0,0.10);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
 }
 
-[data-theme="light"] .entryRow{
-    background: rgba(255,255,255,0.60);
-}
-
-.entryName{
-    font-weight: 900;
-    color: var(--text);
-}
-
-.entryMeta{
-    font-size: 13px;
-    margin-top: 3px;
-}
-
-.entryNums{
-    text-align: right;
-}
-
-.entryKcal{
-    font-weight: 900;
-    color: var(--text);
-}
-
-.entryMacros{
-    font-size: 13px;
-    margin-top: 3px;
-}
-
-.mealFoot{
-    margin-top: 12px;
-    display:flex;
-    justify-content: flex-end;
-}
-
-.recentList{
+.dash .mealRowLeft{
+    min-width: 0;
     display:flex;
     flex-direction: column;
+    gap: 3px;
+}
+
+.dash .mealFood{
+    font-weight: 750;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash .mealRowRight{
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* Make taps feel crisp on touch devices */
+@media (hover: none){
+    .dash .meal:hover{ transform: none; }
+    .dash .iconBtn:hover{ transform: none; }
+}
+
+/* ========================================================================== */
+/* Today Dashboard tweaks (scoped) — readability + more "alive" feel           */
+/* Safe: affects only elements inside .dash                                   */
+/* ========================================================================== */
+
+/* Make header buttons (Logout) readable in dark mode without touching Auth */
+.dash .dashTopRight .btn:not(.btnPrimary){
+    color: var(--text);
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.14);
+    box-shadow: var(--shadow2);
+}
+
+/* If Logout is disabled someday, keep it intentionally readable */
+.dash .dashTopRight .btn:disabled{
+    color: rgba(255,255,255,0.55);
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.08);
+    opacity: 1;
+}
+
+/* Make Add food feel like the primary CTA */
+.dash .quickActions .btnPrimary,
+.dash .actionsRow .btnPrimary{
+    color: rgba(0,0,0,0.92);
+    font-weight: 900;
+    letter-spacing: 0.2px;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+}
+
+/* Disabled buttons should look intentional, not "broken" */
+.dash .quickActions .btn:disabled,
+.dash .quickActions .btnPrimary:disabled,
+.dash .actionsRow .btnPrimary[disabled],
+.dash .actionsRow .btnSecondary[disabled]{
+    color: rgba(255,255,255,0.55);
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.08);
+    opacity: 1;
+    filter: grayscale(0.10);
+}
+
+/* Less serious: give the main number a subtle glow and better presence */
+.dash .heroValue,
+.dash .heroBigNumber{
+    text-shadow:
+            0 0 18px rgba(184,255,44,0.18),
+            0 0 22px rgba(77,163,255,0.14),
+            0 2px 12px rgba(0,0,0,0.45);
+}
+
+/* Make cards feel more touchable without changing global .card */
+.dash .dashCard,
+.dash .card,
+.dash .meal,
+.dash .mealTile{
+    transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+@media (hover:hover){
+    .dash .dashCard:hover,
+    .dash .card:hover{
+        box-shadow: 0 18px 44px rgba(0,0,0,0.45), var(--shadow2);
+        transform: translateY(-1px);
+    }
+}
+
+/* ========================================================================== */
+/* Today — light mode overrides (scoped)                                      */
+/* ========================================================================== */
+
+:root[data-theme="light"] .dash {
+    /* Make panels feel crisp instead of “foggy” */
+    --dash-border: rgba(15, 20, 30, 0.10);
+    --dash-border-2: rgba(15, 20, 30, 0.14);
+}
+
+/* Cards: less glass, more premium surface */
+:root[data-theme="light"] .dash .card,
+:root[data-theme="light"] .dash .dashCard {
+    background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.82));
+    border-color: rgba(15, 20, 30, 0.10);
+    box-shadow:
+            0 18px 50px rgba(10, 18, 30, 0.10),
+            0 2px 10px rgba(10, 18, 30, 0.06);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* Hero: keep the vibe, reduce the “milky” overlay */
+:root[data-theme="light"] .dash .hero::before {
+    opacity: 0.55;
+}
+:root[data-theme="light"] .dash .hero::after {
+    background: linear-gradient(180deg, rgba(255,255,255,0.00), rgba(10,18,30,0.06));
+}
+
+/* Big number: dark text, softer shadow in light mode */
+:root[data-theme="light"] .dash .heroValue,
+:root[data-theme="light"] .dash .heroBigNumber {
+    color: rgba(10, 18, 30, 0.92);
+    text-shadow:
+            0 10px 24px rgba(10,18,30,0.10),
+            0 2px 6px rgba(10,18,30,0.08);
+}
+
+/* Macro tiles: subtle contrast, not gray-on-gray */
+:root[data-theme="light"] .dash .macro,
+:root[data-theme="light"] .dash .meal,
+:root[data-theme="light"] .dash .mealRow {
+    background: rgba(10,18,30,0.035);
+    border-color: rgba(10,18,30,0.08);
+}
+
+/* Bar track: slightly darker so fills read */
+:root[data-theme="light"] .dash .bar,
+:root[data-theme="light"] .dash .barTrack {
+    background: rgba(10,18,30,0.08);
+    border-color: rgba(10,18,30,0.10);
+}
+
+/* Logout button: should be readable on light background */
+:root[data-theme="light"] .dash .dashTopRight .btn:not(.btnPrimary) {
+    color: rgba(10, 18, 30, 0.88);
+    background: rgba(10,18,30,0.04);
+    border-color: rgba(10,18,30,0.10);
+    box-shadow: 0 8px 20px rgba(10,18,30,0.08);
+}
+
+/* Disabled quick actions in light mode: readable but clearly disabled */
+:root[data-theme="light"] .dash .quickActions .btn:disabled,
+:root[data-theme="light"] .dash .quickActions .btnPrimary:disabled {
+    color: rgba(10, 18, 30, 0.45);
+    background: rgba(10,18,30,0.035);
+    border-color: rgba(10,18,30,0.08);
+    opacity: 1;
+    filter: none;
+}
+
+/* ========================================================================== */
+/* Today — gamified calorie gauge (scoped to .dash)                            */
+/* ========================================================================== */
+
+.dash .heroMain{
+    display:grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: clamp(14px, 2vw, 22px);
+    align-items:center;
+}
+
+@media (max-width: 860px){
+    .dash .heroMain{ grid-template-columns: 1fr; }
+}
+
+.dash .heroCopy{ min-width: 0; }
+
+.dash .heroHint{
+    margin-top: 10px;
+    color: var(--dash-muted);
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.dash .heroChips{
+    display:flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.dash .chip{
+    display:flex;
+    gap: 10px;
+    align-items: baseline;
+    padding: 10px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--dash-border);
+    background: rgba(255,255,255,0.06);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.18);
+}
+
+:root[data-theme="light"] .dash .chip{
+    background: rgba(10,18,30,0.03);
+    box-shadow: 0 10px 26px rgba(10,18,30,0.08);
+}
+
+.dash .chipLabel{
+    color: var(--dash-muted);
+    font-size: 12px;
+    letter-spacing: 0.02em;
+}
+
+.dash .chipValue{
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--dash-text);
+}
+
+.dash .gauge{
+    position: relative;
+    width: min(100%, 100%);
+    aspect-ratio: 1 / 1;
+    justify-self: end;
+    display:grid;
+    place-items:center;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--dash-border);
+    box-shadow: var(--dash-shadow);
+    overflow: hidden;
+}
+
+:root[data-theme="light"] .dash .gauge{
+    background: rgba(255,255,255,0.75);
+    box-shadow:
+            0 18px 50px rgba(10,18,30,0.10),
+            0 2px 10px rgba(10,18,30,0.06);
+}
+
+@media (max-width: 860px){
+    .dash .gauge{ justify-self: start; }
+}
+
+.dash .gaugeSvg{
+    width: 88%;
+    height: 88%;
+    filter: drop-shadow(0 14px 26px rgba(0,0,0,0.28));
+}
+
+:root[data-theme="light"] .dash .gaugeSvg{
+    filter: drop-shadow(0 14px 26px rgba(10,18,30,0.10));
+}
+
+.dash .gaugeCenter{
+    position:absolute;
+    inset: 0;
+    display:grid;
+    place-items:center;
+    text-align:center;
+    padding: 18px;
+}
+
+.dash .gaugeNumber{
+    font-size: clamp(38px, 4.2vw, 56px);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    color: var(--dash-text);
+    text-shadow: 0 14px 30px rgba(0,0,0,0.35);
+}
+
+:root[data-theme="light"] .dash .gaugeNumber{
+    text-shadow: 0 14px 30px rgba(10,18,30,0.12);
+}
+
+.dash .gaugeSub{
+    margin-top: -8px;
+    font-size: 13px;
+    color: var(--dash-muted);
+    letter-spacing: 0.02em;
+}
+
+.dash .gaugeMeta{
+    margin-top: 10px;
+    display:flex;
+    gap: 8px;
+    align-items:center;
+    justify-content:center;
+    font-size: 12px;
+    color: var(--dash-muted);
+}
+
+.dash .gaugeMeta .dot{ opacity: 0.7; }
+
+/* Macro color accents (subtle, feels “gamey” without changing theme system) */
+.dash .macro-protein .barFill{ background: linear-gradient(90deg, #ff8a3d, #ff4d73); }
+.dash .macro-carbs   .barFill{ background: linear-gradient(90deg, #4aa3ff, #53e2ff); }
+.dash .macro-fat     .barFill{ background: linear-gradient(90deg, #ffd24a, #ff9f2e); }
+
+/* Keep disabled buttons readable but still disabled (Today only) */
+.dash .quickActions .btn:disabled,
+.dash .quickActions .btnPrimary:disabled{
+    opacity: 1;
+    cursor: not-allowed;
+    color: rgba(255,255,255,0.55);
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.14);
+}
+
+:root[data-theme="light"] .dash .quickActions .btn:disabled,
+:root[data-theme="light"] .dash .quickActions .btnPrimary:disabled{
+    color: rgba(10,18,30,0.45);
+    background: rgba(10,18,30,0.035);
+    border-color: rgba(10,18,30,0.08);
+}
+
+/* Make sure Logout stays readable in both themes (Today only) */
+.dash .dashTopRight .btn{
+    color: rgba(255,255,255,0.85);
+}
+
+:root[data-theme="light"] .dash .dashTopRight .btn{
+    color: rgba(10,18,30,0.88);
+}
+
+/* ===== Today / Dashboard: 270° Arc Gauge + layout overrides ===== */
+
+.dash .heroCenter{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+}
+
+.dash .heroUnder{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
     gap: 10px;
 }
 
-.recentItem{
-    text-align: left;
-    padding: 12px 12px;
-    border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.08);
-    background: rgba(0,0,0,0.10);
-    cursor: pointer;
-    color: var(--text);
+.dash .heroLabel{
+    opacity: .9;
+    letter-spacing: .02em;
 }
 
-[data-theme="light"] .recentItem{
-    background: rgba(255,255,255,0.60);
+/* Chips under the gauge */
+.dash .heroChips{
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
-.recentName{
+.dash .chip{
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.09);
+    backdrop-filter: blur(10px);
+}
+
+.dash .chipLabel{
+    font-size: 13px;
+    opacity: .75;
+}
+
+.dash .chipValue{
+    font-size: 18px;
+    font-weight: 800;
+}
+
+/* 270° gauge */
+.gauge270{
+    position: relative;
+    width: 230px;
+    height: 230px;
+    display: grid;
+    place-items: center;
+}
+
+.gauge270Svg{
+    width: 230px;
+    height: 230px;
+    /* Put the 90° gap at the bottom by rotating the whole ring */
+    transform: rotate(135deg);
+    filter: drop-shadow(0 14px 26px rgba(0,0,0,0.35));
+}
+
+/* Track arc */
+.gauge270Track{
+    stroke: rgba(255,255,255,0.10);
+}
+
+/* Progress arc + subtle load animation */
+.gauge270Prog{
+    transition: stroke-dashoffset 900ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+/* Center content */
+.gauge270Center{
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding-top: 2px;
+}
+
+.gauge270Number{
+    font-size: 54px;
     font-weight: 900;
-    margin-bottom: 4px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-shadow: 0 10px 28px rgba(0,0,0,0.45);
 }
 
-/* =========================
-   Dialog
-   ========================= */
+.gauge270Sub{
+    margin-top: -6px;
+    font-size: 14px;
+    opacity: .8;
+    letter-spacing: .02em;
+}
+
+.gauge270Meta{
+    margin-top: 10px;
+    font-size: 13px;
+    opacity: .85;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.gauge270Meta .dot{
+    opacity: .7;
+}
+
+/* Pulse when remaining changes */
+@keyframes mfPulseNum {
+    0%   { transform: translateY(0) scale(1);   filter: brightness(1); }
+    40%  { transform: translateY(-1px) scale(1.045); filter: brightness(1.15); }
+    100% { transform: translateY(0) scale(1);   filter: brightness(1); }
+}
+
+.gauge270Number.isPulse{
+    animation: mfPulseNum 520ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+/* Make sure the hero content stays nicely centered on wide screens too */
+@media (min-width: 920px){
+    .dash .hero .heroMain,
+    .dash .heroMain{
+        display: block;
+    }
+}
+
+
+/* =========================================
+   Add Food Dialog (glassy, responsive)
+   Uses your existing theme vars: --card, --card2, --stroke, --text, --muted, --shadow2, --volt, --blue
+   ========================================= */
+
 .dlgOverlay{
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(6px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    z-index: 999;
 }
 
-.dlgContent{
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: min(720px, calc(100vw - 24px));
-    max-height: calc(100vh - 24px);
-    overflow: auto;
-    padding: 16px;
+:root[data-theme="light"] .dlgOverlay{
+    background: rgba(10,20,40,0.35);
 }
 
-.dlgHead{
-    display:flex;
-    align-items:center;
+.dlg{
+    width: min(680px, 100%);
+    max-height: min(86vh, 860px);
+    overflow: hidden;
+    border-radius: var(--r-lg);
+    background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06));
+    border: 1px solid var(--stroke);
+    box-shadow: var(--shadow2);
+    position: relative;
+}
+
+:root[data-theme="light"] .dlg{
+    background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.72));
+}
+
+.dlgHeader{
+    display: flex;
+    align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--stroke);
 }
 
 .dlgTitle{
     font-size: 16px;
-    font-weight: 950;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+}
+
+.dlgSub{
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.dlgClose{
+    appearance: none;
+    border: 1px solid var(--btnStroke);
+    background: var(--btnBg);
     color: var(--text);
-}
-
-.dlgFoot{
-    margin-top: 14px;
-    display:flex;
-    align-items:center;
-    justify-content: flex-end;
-    gap: 10px;
-}
-
-.results{
-    margin-top: 12px;
-    display:flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.resultRow{
-    width: 100%;
-    text-align: left;
-    padding: 12px 12px;
-    border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.08);
-    background: rgba(0,0,0,0.10);
+    border-radius: 999px;
+    padding: 8px 10px;
     cursor: pointer;
-    color: var(--text);
-    display:flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    line-height: 1;
+    transition: transform 120ms ease, background 120ms ease;
+}
+.dlgClose:hover{ transform: translateY(-1px); }
+.dlgClose:active{ transform: translateY(0px); }
+
+.dlgBody{
+    padding: 14px 18px 18px;
+    overflow: auto;
+    max-height: calc(min(86vh, 860px) - 62px);
 }
 
-[data-theme="light"] .resultRow{
-    background: rgba(255,255,255,0.60);
-}
-
-.resultName{
-    font-weight: 950;
-}
-
-.resultMacros{
-    font-size: 13px;
-    text-align: right;
-    white-space: nowrap;
-}
-
-.entryBox{
-    margin-top: 12px;
-}
-
-.entryTitle{
-    font-weight: 950;
-    color: var(--text);
-    font-size: 16px;
+/* segmented tabs */
+.segRow{
+    display: inline-flex;
+    gap: 6px;
+    padding: 6px;
+    border-radius: 999px;
+    border: 1px solid var(--stroke);
+    background: rgba(255,255,255,0.06);
     margin-bottom: 12px;
 }
 
-.entryGrid{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+:root[data-theme="light"] .segRow{
+    background: rgba(10,20,40,0.04);
 }
 
-@media (max-width: 680px){
-    .entryGrid{
-        grid-template-columns: 1fr;
-    }
+.seg{
+    appearance: none;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    padding: 10px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
 }
 
-.preview{
-    margin-top: 12px;
-    padding: 12px;
-    border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.10);
-    background: rgba(255,255,255,0.04);
-}
-
-.previewBig{
-    font-size: 28px;
-    font-weight: 950;
+.seg.isActive{
     color: var(--text);
-    margin-bottom: 4px;
+    border-color: var(--stroke);
+    background: rgba(255,255,255,0.10);
+}
+
+:root[data-theme="light"] .seg.isActive{
+    background: rgba(255,255,255,0.70);
+}
+
+/* dialog form bits */
+.dlgRow{
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.dlgRowStack{
+    display: grid;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.dlgInput{
+    width: 100%;
+    border-radius: var(--r-md);
+    border: 1px solid var(--inputStroke);
+    background: var(--inputBg);
+    color: var(--text);
+    padding: 12px 12px;
+    outline: none;
+}
+.dlgInput:focus{
+    background: var(--inputBgFocus);
+    border-color: rgba(77,163,255,0.35);
+}
+
+.dlgHint{
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.dlgError{
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: var(--r-md);
+    border: 1px solid rgba(255,59,107,0.35);
+    background: rgba(255,59,107,0.10);
+    color: var(--text);
+    font-size: 13px;
+}
+
+/* results list */
+.foodList{
+    margin-top: 12px;
+    display: grid;
+    gap: 10px;
+}
+
+.foodRow{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 12px;
+    border-radius: var(--r-md);
+    border: 1px solid var(--stroke);
+    background: rgba(255,255,255,0.05);
+    cursor: pointer;
+    transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+.foodRow:hover{
+    transform: translateY(-1px);
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.16);
+}
+:root[data-theme="light"] .foodRow{
+    background: rgba(255,255,255,0.70);
+}
+:root[data-theme="light"] .foodRow:hover{
+    background: rgba(255,255,255,0.88);
+    border-color: rgba(10,20,40,0.14);
+}
+
+.foodLeft{
+    min-width: 0;
+}
+.foodName{
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.foodMeta{
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.foodRight{
+    flex: 0 0 auto;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+/* footer actions inside dialog */
+.dlgActions{
+    margin-top: 14px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btnSmall{
+    appearance: none;
+    border: 1px solid var(--btnStroke);
+    background: var(--btnBg);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 10px 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+.btnSmall:hover{ transform: translateY(-1px); }
+.btnSmall:active{ transform: translateY(0px); }
+
+.btnSmallPrimary{
+    border-color: rgba(184,255,44,0.35);
+    background: linear-gradient(135deg, rgba(184,255,44,0.22), rgba(77,163,255,0.14));
+}
+
+/* Meal header + add button (Today page) */
+.mealHead{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.mealAddBtn{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--btnStroke);
+    background: var(--btnBg);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 10px 12px;
+    font-weight: 900;
+    cursor: pointer;
+    line-height: 1;
+    transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+}
+.mealAddBtn:hover{ transform: translateY(-1px); }
+.mealAddBtn:active{ transform: translateY(0px); }
+.mealAddBtn .plus{
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.08);
+}
+:root[data-theme="light"] .mealAddBtn .plus{
+    border-color: rgba(10,20,40,0.14);
+    background: rgba(10,20,40,0.05);
+}
+
+/* Mobile tweaks */
+@media (max-width: 520px){
+    .dlg{ border-radius: 20px; }
+    .dlgHeader{ padding: 14px 14px; }
+    .dlgBody{ padding: 12px 14px 14px; }
+    .seg{ padding: 10px 10px; font-size: 12px; }
+    .dlgRow{ flex-direction: column; align-items: stretch; }
 }

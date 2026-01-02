@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Middleware(svc *Service) gin.HandlerFunc {
+func (s *Service) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authz := strings.TrimSpace(c.GetHeader("Authorization"))
 		if authz == "" {
@@ -21,14 +21,18 @@ func Middleware(svc *Service) gin.HandlerFunc {
 			return
 		}
 
-		userID, username, err := svc.ParseToken(parts[1])
+		userID, username, err := s.ParseToken(parts[1])
 		if err != nil || userID == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 			return
 		}
 
-		c.Set("userId", userID)
+		// IMPORTANT: handlers expect snake_case keys
+		c.Set("user_id", userID)
 		c.Set("username", username)
+
+		// Back-compat (some code may use camelCase)
+		c.Set("userId", userID)
 
 		c.Next()
 	}

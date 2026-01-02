@@ -8,106 +8,174 @@ type Mode = "login" | "register";
 
 export function AuthPage({ onAuthed }: { onAuthed: () => void }) {
     const [mode, setMode] = useState<Mode>("login");
-    const [loading, setLoading] = useState(false);
-    const [err, setErr] = useState<string | null>(null);
     const [theme, setTheme] = useState<Theme>(() => getInitialTheme());
 
-    async function onSubmit(formData: FormData) {
-        const username = String(formData.get("username") || "").trim();
-        const password = String(formData.get("password") || "");
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-        setErr(null);
-        setLoading(true);
+    const title = mode === "login" ? "Back at it." : "Let’s build momentum.";
+    const subtitle =
+        mode === "login"
+            ? "Log in and keep today’s numbers clean."
+            : "Create an account. No email required.";
 
+    async function submit() {
+        setError(null);
+        setBusy(true);
         try {
+            const u = username.trim();
+
             if (mode === "register") {
-                await register(username, password);
+                await register(u, password);
             }
-            await login(username, password);
+
+            await login(u, password);
             onAuthed();
-        } catch (e: any) {
-            setErr(e?.message || "Something went wrong");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Something went wrong");
         } finally {
-            setLoading(false);
+            setBusy(false);
         }
     }
 
     return (
         <div className="shell">
+            {/* Floating theme toggle */}
+            <button
+                type="button"
+                className="themeToggle"
+                onClick={() => setTheme((t) => toggleTheme())}
+                aria-label="Toggle theme"
+                title="Toggle theme"
+            >
+                {theme === "dark" ? (
+                    // Sun icon
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                ) : (
+                    // Moon icon
+                    <svg viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3A7 7 0 0 0 21 12.79z" />
+                    </svg>
+                )}
+            </button>
+
             <div className="authWrap">
                 <div className="brand">
                     <div className="brandMark" />
                     <div className="brandName">MacroFacts</div>
-
-                    <button
-                        className="themeFab"
-                        onClick={() => {
-                            toggleTheme();
-                            setTheme(getInitialTheme());
-                        }}
-                        title="Toggle theme"
-                    >
-                        {theme === "dark" ? "☾" : "☀"}
-                    </button>
                 </div>
 
-                <div className="card authCard">
-                    <div className="authHead">
-                        <div className="authTitle">{mode === "login" ? "Welcome back" : "Create account"}</div>
-                        <div className="authSub muted">
-                            Privacy-first. Username-only. No email.
-                        </div>
-                    </div>
+                <div className="card cardPad">
+                    <h1 className="h1">{title}</h1>
+                    <p className="sub">{subtitle}</p>
 
-                    {err ? <div className="errorText">{err}</div> : null}
+                    <div className="sep" />
 
-                    <Form.Root className="form" onSubmit={(e) => {
-                        e.preventDefault();
-                        void onSubmit(new FormData(e.currentTarget));
-                    }}>
-                        <Form.Field className="field" name="username">
-                            <div className="fieldTop">
-                                <Form.Label asChild>
-                                    <Label.Root className="label">Username</Label.Root>
-                                </Form.Label>
-                            </div>
+                    <Form.Root
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            void submit();
+                        }}
+                    >
+                        <Form.Field name="username">
+                            <Label.Root className="label" htmlFor="username">
+                                Username
+                            </Label.Root>
+
                             <Form.Control asChild>
-                                <input className="input" autoComplete="username" placeholder="KEVIN" required />
+                                <input
+                                    id="username"
+                                    className="input"
+                                    type="text"
+                                    autoComplete="username"
+                                    placeholder="Your username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    minLength={3}
+                                    maxLength={32}
+                                    required
+                                />
                             </Form.Control>
-                            <div className="hint">We canonicalize usernames to UPPERCASE.</div>
+
+                            <Form.Message match="valueMissing" className="errInline">
+                                Pick a username.
+                            </Form.Message>
+                            <Form.Message match="tooShort" className="errInline">
+                                Username must be at least 3 characters.
+                            </Form.Message>
                         </Form.Field>
 
-                        <Form.Field className="field" name="password">
-                            <div className="fieldTop">
-                                <Form.Label asChild>
-                                    <Label.Root className="label">Password</Label.Root>
-                                </Form.Label>
-                            </div>
+                        <div style={{ height: 14 }} />
+
+                        <Form.Field name="password">
+                            <Label.Root className="label" htmlFor="password">
+                                Password
+                            </Label.Root>
+
                             <Form.Control asChild>
-                                <input className="input" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} required />
+                                <input
+                                    id="password"
+                                    className="input"
+                                    type="password"
+                                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                                    placeholder={mode === "login" ? "Your password" : "Create a strong password"}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    minLength={10}
+                                    required
+                                />
                             </Form.Control>
-                            <div className="hint">Minimum 8 characters.</div>
+
+                            <Form.Message match="valueMissing" className="errInline">
+                                Add a password.
+                            </Form.Message>
+                            <Form.Message match="tooShort" className="errInline">
+                                Use at least 10 characters.
+                            </Form.Message>
                         </Form.Field>
 
-                        <button className="btn" disabled={loading} type="submit">
-                            {loading ? "…" : mode === "login" ? "Login" : "Create account"}
+                        {error && <div className="errBox">{error}</div>}
+
+                        <div style={{ height: 16 }} />
+
+                        <button className="btn btnPrimary" type="submit" disabled={busy}>
+                            {busy ? "Working…" : mode === "login" ? "Log in" : "Create account"}
                         </button>
 
-                        <div className="switchRow">
+                        <div style={{ height: 12 }} />
+
+                        <div className="row">
+                            <div style={{ color: "var(--muted)", fontSize: 13 }}>
+                                {mode === "login" ? "New here?" : "Already have an account?"}
+                            </div>
+
                             <button
-                                className="linkBtn"
                                 type="button"
-                                onClick={() => setMode(mode === "login" ? "register" : "login")}
+                                className="linkBtn"
+                                onClick={() => {
+                                    setError(null);
+                                    setMode(mode === "login" ? "register" : "login");
+                                }}
                             >
-                                {mode === "login" ? "New here? Create an account" : "Already have an account? Login"}
+                                {mode === "login" ? "Create account" : "Log in"}
                             </button>
                         </div>
                     </Form.Root>
                 </div>
 
-                <div className="muted footNote">
-                    No tracking. No email. No ads. Just nutrition.
-                </div>
+                <div className="note">Privacy by default. No email required.</div>
             </div>
         </div>
     );

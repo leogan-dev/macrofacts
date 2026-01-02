@@ -1,10 +1,10 @@
 package foods
 
 import (
-    "strconv"
-    "strings"
+	"strconv"
+	"strings"
 
-    "go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // OFF -> DTO mapping lives here so service.go stays small and we avoid duplicate helpers.
@@ -17,7 +17,12 @@ func offDocToDTO(d OffFoodDoc) FoodDTO {
 	}
 
 	// Identity
-	if code := strings.TrimSpace(d.Code); code != "" {
+	// Prefer explicit "code" but fall back to Mongo _id (common in OFF dumps)
+	code := strings.TrimSpace(d.Code)
+	if code == "" {
+		code = strings.TrimSpace(d.ID)
+	}
+	if code != "" {
 		dto.Barcode = &code
 	}
 	if brand := strings.TrimSpace(d.Brands); brand != "" {
@@ -71,7 +76,7 @@ func pickFloatPtr(m map[string]any, keys ...string) *float64 {
 }
 
 func pickMaybeFloat(m map[string]any, keys ...string) *float64 {
-    return pickFloatPtr(m, keys...)
+	return pickFloatPtr(m, keys...)
 }
 
 func asFloat(v any) (float64, bool) {

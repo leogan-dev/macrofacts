@@ -2,35 +2,45 @@ package foods
 
 import (
 	"context"
-	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type OffFoodDoc struct {
-	Code        string         `bson:"code"`
-	ProductName string         `bson:"product_name"`
-	Brands      string         `bson:"brands"`
-	Popularity  int64          `bson:"popularity_key"`
-	ServingSize string         `bson:"serving_size"`
-	Quantity    string         `bson:"quantity"`
-	Nutriments  map[string]any `bson:"nutriments"`
-}
-
 type RepoMongoOFF struct {
 	col        *mongo.Collection
-	searchMode string // "regex" or "text"
+	searchMode string // "keywords" | "regex" | "text"
+}
+
+type OffFoodDoc struct {
+	ID string `bson:"_id"`
+
+	// Optional in some dumps, but often empty because the barcode is stored in _id.
+	Code string `bson:"code"`
+
+	ProductName string `bson:"product_name"`
+	Brands      string `bson:"brands"`
+
+	ServingSize string `bson:"serving_size"`
+	Quantity    string `bson:"quantity"`
+
+	Popularity  int64 `bson:"popularity_key"`
+	UniqueScans int64 `bson:"unique_scans_n"`
+
+	Keywords []string `bson:"_keywords"`
+
+	Nutriments map[string]any `bson:"nutriments"`
 }
 
 func NewRepoMongoOFF(client *mongo.Client, dbName, collection, searchMode string) *RepoMongoOFF {
 	searchMode = strings.TrimSpace(strings.ToLower(searchMode))
 	if searchMode == "" {
-		searchMode = "regex"
+		// Default to keyword search because OFF dumps commonly include `_keywords`
+		// and many datasets are already near the index limit (so adding new indexes fails).
+		searchMode = "keywords"
 	}
 	return &RepoMongoOFF{
 		col:        client.Database(dbName).Collection(collection),
@@ -38,41 +48,23 @@ func NewRepoMongoOFF(client *mongo.Client, dbName, collection, searchMode string
 	}
 }
 
-func NewMongoClient(ctx context.Context, mongoURI string) (*mongo.Client, error) {
-	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
-	defer cancel()
-
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
-	if err != nil {
-		return nil, err
-	}
-
-	if err := client.Database("admin").RunCommand(ctx, bson.M{"ping": 1}).Err(); err != nil {
-		_ = client.Disconnect(context.Background())
-		return nil, err
-	}
-
-	return client, nil
-}
-
-// Create a text index for name+brand search. Safe to call at startup.
+// Only needed if you explicitly use the "text" mode.
+// In "keywords" mode, avoid attempting to create extra indexes (many dumps hit index limits).
 func (r *RepoMongoOFF) EnsureTextIndex(ctx context.Context) error {
-	// Always create the sort helper index (used by regex + cursor).
+	if r.searchMode != "text" {
+		return nil
+	}
+
 	models := []mongo.IndexModel{
 		{
-			Keys:    bson.D{{Key: "popularity_key", Value: -1}, {Key: "code", Value: 1}},
-			Options: options.Index().SetName("idx_popularity_code"),
-		},
-	}
-	if r.searchMode == "text" {
-		models = append(models, mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "product_name", Value: "text"},
 				{Key: "brands", Value: "text"},
 			},
-			Options: options.Index().SetName("idx_text_name_brands").SetDefaultLanguage("none"),
-		})
+			Options: options.Index().SetName("idx_name_brand_text").SetDefaultLanguage("none"),
+		},
 	}
+
 	_, err := r.col.Indexes().CreateMany(ctx, models)
 	return err
 }
@@ -80,107 +72,101 @@ func (r *RepoMongoOFF) EnsureTextIndex(ctx context.Context) error {
 func (r *RepoMongoOFF) ByBarcode(ctx context.Context, code string) (*OffFoodDoc, error) {
 	code = strings.TrimSpace(code)
 	if code == "" {
-		return nil, NotFoundError{Msg: "empty barcode"}
+		return nil, nil
 	}
 
 	filter := bson.M{
-		"code": code,
+		"$or": []bson.M{
+			{"code": code},
+			{"_id": code},
+		},
 		"product_name": bson.M{
 			"$type": "string",
 			"$ne":   "",
 		},
 	}
 
-	opts := options.FindOne().SetProjection(bson.M{
-		"code":         1,
-		"product_name": 1,
-		"brands":       1,
-		"nutriments":   1,
-		"serving_size": 1,
-		"quantity":     1,
-		"_id":          0,
-	})
-
-	var doc OffFoodDoc
-	err := r.col.FindOne(ctx, filter, opts).Decode(&doc)
-	if doc.Nutriments == nil {
-		doc.Nutriments = map[string]any{}
-	}
-	if err == mongo.ErrNoDocuments {
-		return nil, NotFoundError{Msg: "off food not found"}
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return &doc, nil
-}
-
-// Text search
-func (r *RepoMongoOFF) SearchByNameOrBrand(ctx context.Context, q string, limit int, cursor string) ([]OffFoodDoc, *string, error) {
-	q = strings.TrimSpace(q)
-	if q == "" {
-		return []OffFoodDoc{}, nil, nil
-	}
-	if limit <= 0 || limit > 50 {
-		limit = 25
-	}
-
-	var filter bson.M
-	var sort bson.D
-	var projection bson.M
-	projection = bson.M{
+	projection := bson.M{
+		"_id":            1,
 		"code":           1,
 		"product_name":   1,
 		"brands":         1,
 		"nutriments":     1,
 		"serving_size":   1,
 		"quantity":       1,
-		"popularity_key": 1,
-		"_id":            0,
+		"unique_scans_n": 1,
 	}
 
-	if r.searchMode == "text" {
-		filter = bson.M{
-			"$and": []bson.M{
-				{"product_name": bson.M{"$type": "string", "$ne": ""}},
-				{"code": bson.M{"$type": "string", "$ne": ""}},
-				{"$text": bson.M{"$search": q}},
-			},
-		}
-		// For text search, use score first, then popularity.
-		projection["score"] = bson.M{"$meta": "textScore"}
-		sort = bson.D{{Key: "score", Value: bson.M{"$meta": "textScore"}}, {Key: "popularity_key", Value: -1}, {Key: "code", Value: 1}}
-	} else {
-		pat := regexp.QuoteMeta(q)
-		filter = bson.M{
-			"$and": []bson.M{
-				{"product_name": bson.M{"$type": "string", "$ne": ""}},
-				{"code": bson.M{"$type": "string", "$ne": ""}},
-				{
-					"$or": []bson.M{
-						{"product_name": bson.M{"$regex": pat, "$options": "i"}},
-						{"brands": bson.M{"$regex": pat, "$options": "i"}},
+	var out OffFoodDoc
+	err := r.col.FindOne(ctx, filter, options.FindOne().SetProjection(projection)).Decode(&out)
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (r *RepoMongoOFF) SearchByNameOrBrand(
+	ctx context.Context,
+	q string,
+	limit int,
+	cursor *string,
+) ([]OffFoodDoc, *string, error) {
+
+	tokens := keywordize(q)
+	if len(tokens) == 0 {
+		return []OffFoodDoc{}, nil, nil
+	}
+
+	filter := bson.M{
+		"_keywords": bson.M{"$in": tokens},
+		"product_name": bson.M{
+			"$type": "string",
+			"$ne":   "",
+		},
+		"code": bson.M{
+			"$type": "string",
+			"$ne":   "",
+		},
+	}
+
+	if cursor != nil {
+		if scans, code, ok := parseKeywordCursor(*cursor); ok {
+			filter = bson.M{
+				"$and": []bson.M{
+					filter,
+					{
+						"$or": []bson.M{
+							{"unique_scans_n": bson.M{"$lt": scans}},
+							{
+								"unique_scans_n": scans,
+								"code":           bson.M{"$gt": code},
+							},
+						},
 					},
 				},
-			},
-		}
-		sort = bson.D{{Key: "popularity_key", Value: -1}, {Key: "code", Value: 1}}
-		// Cursor pagination for regex (and also OK for text): cursor="<popularity>|<code>"
-		if p, c, ok := parseCursor(cursor); ok {
-			filter["$and"] = append(filter["$and"].([]bson.M), bson.M{
-				"$or": []bson.M{
-					{"popularity_key": bson.M{"$lt": p}},
-					{"popularity_key": p, "code": bson.M{"$gt": c}},
-				},
-			})
+			}
 		}
 	}
 
 	opts := options.Find().
 		SetLimit(int64(limit)).
-		SetProjection(projection).
-		SetSort(sort)
+		SetSort(bson.D{
+			{Key: "unique_scans_n", Value: -1},
+			{Key: "code", Value: 1},
+		}).
+		SetProjection(bson.M{
+			"_id":            0, // ⬅️ CRITICAL FIX
+			"code":           1,
+			"product_name":   1,
+			"brands":         1,
+			"nutriments":     1,
+			"serving_size":   1,
+			"quantity":       1,
+			"unique_scans_n": 1,
+		})
 
 	cur, err := r.col.Find(ctx, filter, opts)
 	if err != nil {
@@ -188,26 +174,18 @@ func (r *RepoMongoOFF) SearchByNameOrBrand(ctx context.Context, q string, limit 
 	}
 	defer cur.Close(ctx)
 
-	out := make([]OffFoodDoc, 0, limit)
-	for cur.Next(ctx) {
-		var d OffFoodDoc
-		if err := cur.Decode(&d); err != nil {
-			continue
-		}
-		if d.Nutriments == nil {
-			d.Nutriments = map[string]any{}
-		}
-		out = append(out, d)
-	}
-	if err := cur.Err(); err != nil {
+	var out []OffFoodDoc
+	if err := cur.All(ctx, &out); err != nil {
 		return nil, nil, err
 	}
+
 	var next *string
 	if len(out) > 0 {
 		last := out[len(out)-1]
-		n := makeCursor(last.Popularity, last.Code)
-		next = &n
+		c := makeKeywordCursor(last.UniqueScans, last.Code)
+		next = &c
 	}
+
 	return out, next, nil
 }
 
@@ -224,13 +202,74 @@ func parseCursor(cursor string) (pop int64, code string, ok bool) {
 	if err != nil {
 		return 0, "", false
 	}
-	code = strings.TrimSpace(parts[1])
-	if code == "" {
-		return 0, "", false
-	}
-	return p, code, true
+	return p, parts[1], true
 }
 
 func makeCursor(pop int64, code string) string {
 	return strconv.FormatInt(pop, 10) + "|" + code
+}
+
+// keywordize turns a free-form query into OFF `_keywords` tokens (lowercase words).
+func keywordize(q string) []string {
+	q = strings.ToLower(strings.TrimSpace(q))
+	if q == "" {
+		return nil
+	}
+
+	// Replace anything that's not letter/number with spaces.
+	var b strings.Builder
+	b.Grow(len(q))
+	for _, r := range q {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			b.WriteRune(r)
+		} else {
+			b.WriteByte(' ')
+		}
+	}
+
+	raw := strings.Fields(b.String())
+	if len(raw) == 0 {
+		return nil
+	}
+
+	seen := make(map[string]struct{}, len(raw))
+	out := make([]string, 0, len(raw))
+	for _, t := range raw {
+		if len(t) < 2 {
+			continue
+		}
+		if _, ok := seen[t]; ok {
+			continue
+		}
+		seen[t] = struct{}{}
+		out = append(out, t)
+		if len(out) >= 6 {
+			break
+		}
+	}
+	return out
+}
+
+func parseKeywordCursor(cursor string) (unique int64, id string, ok bool) {
+	cursor = strings.TrimSpace(cursor)
+	if cursor == "" {
+		return 0, "", false
+	}
+	parts := strings.SplitN(cursor, "|", 2)
+	if len(parts) != 2 {
+		return 0, "", false
+	}
+	u, err := strconv.ParseInt(parts[0], 10, 64)
+	if err != nil {
+		return 0, "", false
+	}
+	id = strings.TrimSpace(parts[1])
+	if id == "" {
+		return 0, "", false
+	}
+	return u, id, true
+}
+
+func makeKeywordCursor(unique int64, id string) string {
+	return strconv.FormatInt(unique, 10) + "|" + id
 }

@@ -109,3 +109,30 @@ export type CreateLogEntryRequest = {
 };
 
 export type CreateLogEntryResponse = { id: string };
+
+export type CreateCustomFoodRequest = {
+    name: string;
+
+    brand?: string | null;
+    barcode?: string | null;
+
+    servingSize?: string | null;
+    quantity?: string | null;
+    servingG?: number | null;
+
+    kcalPer100g: number;
+    proteinPer100g: number;
+    carbsPer100g: number;
+    fatPer100g: number;
+
+    fiberPer100g?: number | null;
+    sugarPer100g?: number | null;
+    saltPer100g?: number | null;
+
+    sodiumPer100g?: number | null;
+
+    saturatedFatPer100g?: number | null;
+    monounsaturatedFatPer100g?: number | null;
+    polyunsaturatedFatPer100g?: number | null;
+    alphaLinolenicAcidPer100g?: number | null;
+};

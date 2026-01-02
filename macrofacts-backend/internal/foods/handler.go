@@ -29,6 +29,9 @@ func NewHandler(svc *Service) *Handler {
 func (h *Handler) RegisterRoutes(r *gin.RouterGroup) {
 	r.GET("/foods/search", h.Search)
 	r.GET("/foods/barcode/:code", h.ByBarcode)
+
+	// ✅ add this
+	r.POST("/foods/custom", h.CreateCustom)
 }
 
 func (h *Handler) Search(c *gin.Context) {

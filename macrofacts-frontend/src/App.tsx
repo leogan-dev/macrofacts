@@ -1,7 +1,9 @@
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { AuthPage } from "./pages/AuthPage";
-import { TodayPage } from "./pages/TodayPage";
+import TodayPage from "./pages/TodayPage";
 import { clearToken, getToken } from "./api/client";
+import AddFoodPage from "./pages/AddFoodPage";
+
 
 function RequireAuth({ children }: { children: JSX.Element }) {
     const token = getToken();
@@ -42,6 +44,7 @@ export default function App() {
                 />
                 <Route path="/" element={<Navigate to={authed ? "/today" : "/auth"} replace />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
+                <Route path="/add-food" element={<AddFoodPage />} />
             </Routes>
         </BrowserRouter>
     );

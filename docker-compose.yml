@@ -3,11 +3,12 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: macrofacts
-      POSTGRES_USER: macrofacts
-      POSTGRES_PASSWORD: macrofacts
+        POSTGRES_DB: macrofacts
+        POSTGRES_USER: macrofacts
+        POSTGRES_PASSWORD: macrofacts
     volumes:
-      - pg_data:/var/lib/postgresql/data
+        - pg_data:/var/lib/postgresql/data
+        - ./cmd/api/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U macrofacts -d macrofacts"]
       interval: 5s
@@ -24,6 +25,7 @@ services:
       MONGO_URI: mongodb://mongo:27017
       OFF_DB: off
       OFF_COLLECTION: products
+      OFF_SEARCH_MODe: text
     expose:
       - "8080"
     depends_on:
