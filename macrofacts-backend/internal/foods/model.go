@@ -77,4 +77,8 @@ type CreateFoodRequest struct {
 	MonounsaturatedFatPer100g *float64 `json:"monounsaturatedFatPer100g,omitempty"`
 	PolyunsaturatedFatPer100g *float64 `json:"polyunsaturatedFatPer100g,omitempty"`
 	AlphaLinolenicAcidPer100g *float64 `json:"alphaLinolenicAcidPer100g,omitempty"`
+
+	// Optional OFF-compatible nutriments map (per 100g), using OFF keys like "sugars_100g".
+	// This is the preferred extensible way to submit additional nutrients for custom foods.
+	Nutriments map[string]float64 `json:"nutriments,omitempty"`
 }

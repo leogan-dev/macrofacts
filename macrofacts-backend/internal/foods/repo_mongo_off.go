@@ -16,7 +16,7 @@ type RepoMongoOFF struct {
 }
 
 type OffFoodDoc struct {
-	ID string `bson:"_id"`
+	ID any `bson:"_id"`
 
 	// Optional in some dumps, but often empty because the barcode is stored in _id.
 	Code string `bson:"code"`
@@ -33,6 +33,15 @@ type OffFoodDoc struct {
 	Keywords []string `bson:"_keywords"`
 
 	Nutriments map[string]any `bson:"nutriments"`
+}
+
+func (d OffFoodDoc) IDString() string {
+	switch v := d.ID.(type) {
+	case string:
+		return v
+	default:
+		return ""
+	}
 }
 
 func NewRepoMongoOFF(client *mongo.Client, dbName, collection, searchMode string) *RepoMongoOFF {
@@ -75,19 +84,14 @@ func (r *RepoMongoOFF) ByBarcode(ctx context.Context, code string) (*OffFoodDoc,
 		return nil, nil
 	}
 
+	// 1) Try "code" first (works on standard OFF dumps)
 	filter := bson.M{
-		"$or": []bson.M{
-			{"code": code},
-			{"_id": code},
-		},
-		"product_name": bson.M{
-			"$type": "string",
-			"$ne":   "",
-		},
+		"code":         code,
+		"product_name": bson.M{"$type": "string", "$ne": ""},
 	}
 
 	projection := bson.M{
-		"_id":            1,
+		"_id":            1, // safe now because ID is `any`
 		"code":           1,
 		"product_name":   1,
 		"brands":         1,
@@ -99,6 +103,21 @@ func (r *RepoMongoOFF) ByBarcode(ctx context.Context, code string) (*OffFoodDoc,
 
 	var out OffFoodDoc
 	err := r.col.FindOne(ctx, filter, options.FindOne().SetProjection(projection)).Decode(&out)
+	if err == nil {
+		return &out, nil
+	}
+	if err != mongo.ErrNoDocuments {
+		return nil, err
+	}
+
+	// 2) Fallback: some dumps store barcode in _id as a STRING.
+	// Querying _id is okay; decoding is safe because ID is `any`.
+	filter = bson.M{
+		"_id":          code,
+		"product_name": bson.M{"$type": "string", "$ne": ""},
+	}
+
+	err = r.col.FindOne(ctx, filter, options.FindOne().SetProjection(projection)).Decode(&out)
 	if err == mongo.ErrNoDocuments {
 		return nil, nil
 	}
@@ -112,7 +131,7 @@ func (r *RepoMongoOFF) SearchByNameOrBrand(
 	ctx context.Context,
 	q string,
 	limit int,
-	cursor *string,
+	cursor string,
 ) ([]OffFoodDoc, *string, error) {
 
 	tokens := keywordize(q)
@@ -132,16 +151,17 @@ func (r *RepoMongoOFF) SearchByNameOrBrand(
 		},
 	}
 
-	if cursor != nil {
-		if scans, code, ok := parseKeywordCursor(*cursor); ok {
+	// Cursor for keywords: "<unique_scans_n>|<code>"
+	if cursor != "" {
+		if u, code, ok := parseKeywordCursor(cursor); ok {
 			filter = bson.M{
 				"$and": []bson.M{
 					filter,
 					{
 						"$or": []bson.M{
-							{"unique_scans_n": bson.M{"$lt": scans}},
+							{"unique_scans_n": bson.M{"$lt": u}},
 							{
-								"unique_scans_n": scans,
+								"unique_scans_n": u,
 								"code":           bson.M{"$gt": code},
 							},
 						},

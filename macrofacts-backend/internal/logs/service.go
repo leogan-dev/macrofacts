@@ -196,13 +196,27 @@ func (s *Service) CreateEntry(ctx context.Context, userID string, req CreateEntr
 	var dto *foods.FoodDTO
 	switch req.Source {
 	case foods.FoodSourceOFF:
-		if req.Barcode == nil || *req.Barcode == "" {
+		// Accept barcode explicitly, but also allow foodId to act as barcode
+		// so name-search selection works without the barcode field.
+		var code string
+		if req.Barcode != nil && *req.Barcode != "" {
+			code = *req.Barcode
+		} else if req.FoodID != nil && *req.FoodID != "" {
+			code = *req.FoodID
+		} else {
 			return "", errors.New("barcode required for off")
 		}
-		dto, err = s.foods.ByBarcode(ctx, *req.Barcode)
+
+		// IMPORTANT: persist identifier in `barcode` column.
+		// food_id column is UUID and must remain null for OFF entries.
+		req.Barcode = &code
+		req.FoodID = nil
+
+		dto, err = s.foods.ByBarcode(ctx, code)
 		if err != nil || dto == nil {
 			return "", errors.New("food not found")
 		}
+
 	case foods.FoodSourceCustom:
 		if req.FoodID == nil || *req.FoodID == "" {
 			return "", errors.New("foodId required for custom")

@@ -20,9 +20,10 @@ func offDocToDTO(d OffFoodDoc) FoodDTO {
 	// Prefer explicit "code" but fall back to Mongo _id (common in OFF dumps)
 	code := strings.TrimSpace(d.Code)
 	if code == "" {
-		code = strings.TrimSpace(d.ID)
+		code = strings.TrimSpace(d.IDString())
 	}
 	if code != "" {
+		dto.ID = code
 		dto.Barcode = &code
 	}
 	if brand := strings.TrimSpace(d.Brands); brand != "" {

@@ -110,6 +110,7 @@ func main() {
 	api.GET("/foods/search", foodsHandler.Search)
 	api.GET("/foods/barcode/:code", foodsHandler.ByBarcode)
 	api.POST("/foods", authRequired, foodsHandler.CreateCustom)
+	api.POST("/foods/custom", authRequired, foodsHandler.CreateCustom)
 
 	api.GET("/logs/today", authRequired, logsHandler.Today)
 	api.POST("/logs/entries", authRequired, logsHandler.CreateEntry)
